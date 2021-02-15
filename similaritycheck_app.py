@@ -5,7 +5,6 @@ import numpy as np
 import nltk
 nltk.download('stopwords')
 nltk.download('punkt')
-import tensorflow
 from nltk import word_tokenize
 from nltk.stem import PorterStemmer
 from tensorflow.keras.preprocessing.text import Tokenizer
@@ -13,8 +12,16 @@ from nltk.corpus import stopwords
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 # load model and other files
+MAX_NB_WORDS = 50000
+MAX_SEQUENCE_LENGTH = 100
+model = tensorflow.keras.models.Sequential()
+model.add(tensorflow.keras.layers.Embedding(MAX_NB_WORDS, MAX_SEQUENCE_LENGTH, input_length=250))
+model.add(tensorflow.keras.layers.SpatialDropout1D(0.2))
+model.add(tensorflow.keras.layers.LSTM(100, dropout=0.2, recurrent_dropout=0.2))
+model.add(tensorflow.keras.layers.Dense(50, activation='softmax'))
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-loaded_model = tensorflow.keras.models.load_model('model.h5')
+model.load_weights("model_weights.hdf5")
 dataset=pd.read_csv('final_data.csv', names= ["aaa","description", "target"])
 dataset=dataset.drop(["aaa"],axis=1)
 df = dataset.iloc[1:150000]
@@ -60,13 +67,13 @@ def main ():
             output.append(" ".join([ps.stem(i) for i in sentence]))
 
         MAX_NB_WORDS = 50000
-        MAX_SEQUENCE_LENGTH = 250
+        MAX_SEQUENCE_LENGTH = 100
 
         tokenizer = Tokenizer(num_words=MAX_NB_WORDS, filters='!"#$%&()*+,-./:;<=>?@[\]^_`{|}~', lower=True)
         seq = tokenizer.texts_to_sequences(output)
         padded = pad_sequences(seq, maxlen=MAX_SEQUENCE_LENGTH)
 
-        pred = loaded_model.predict(padded)
+        pred = model.predict(padded)
         a = labels[np.argmax(pred)]
         out.append(a)
 
@@ -75,5 +82,3 @@ def main ():
 
 if __name__ == '__main__':
     main()
-
-
