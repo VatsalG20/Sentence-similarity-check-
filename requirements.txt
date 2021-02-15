@@ -1,5 +1,5 @@
 nltk==3.5
 streamlit==0.75.0
-Tflite
+tensorflow-cpu==2.4.1
 pandas==1.0.5
 numpy==1.19.5
